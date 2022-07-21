@@ -10,9 +10,12 @@ const totalUsers = (parent, args, { db }) =>
 const allUsers = (parent, args, { db }) =>
     db.collection('users').find().toArray();
 
+const me = (parent, args, { currentUser }) => currentUser;
+
 module.exports = {
     totalPhotos,
     allPhotos,
     totalUsers,
-    allUsers
+    allUsers,
+    me
 }
