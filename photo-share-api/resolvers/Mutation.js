@@ -1,14 +1,21 @@
+const fetch = require('node-fetch');
 const { authorizeWithGithub } = require('../lib');
 
-let _id = 0;
+const postPhoto = async (parent, args, { db, currentUser }) => {
 
-const postPhoto = (parent, args) => {
-    const newPhoto = {
-        id: _id++,
-        created: new Date(),
-        ...args.input
+    if (!currentUser) {
+        throw new Error('only an authorized user can post a photo');
     }
-    photos.push(newPhoto);
+
+    const newPhoto = {
+        ...args.input,
+        userID: currentUser.githubLogin,
+        created: new Date()
+    }
+
+    const { insertedIds } = await db.collection('photos').insert(newPhoto);
+    newPhoto.id = insertedIds[0];
+
     return newPhoto;
 };
 
@@ -33,6 +40,36 @@ const githubAuth = async (parent, { code }, { db }) => {
         .collection('users').replaceOne({ githubLogin: login }, latestUserInfo, { upsert: true });
 
     return { user, token: access_token };
+};
+
+const addFakeUsers = async (root, { count }, { db }) => {
+    const randomUserApi = `https://randomuser.me/api/?results=${count}`;
+
+    const { results } = await fetch(randomUserApi).then(res => res.json());
+
+    const users = results.map(r => ({
+        githubLogin: r.login.username,
+        name: `${r.name.first} ${r.name.last}`,
+        avatar: r.picture.thumbnail,
+        githubToken: r.login.sha1
+    }));
+
+    await db.collection('users').insert(users);
+
+    return users;
+};
+
+const fakeUserAuth = async (parent, { githubLogin }, { db }) => {
+    const user = await db.collection('users').findOne({ githubLogin });
+
+    if (!user) {
+        throw new Error(`Cannot find user with githubLogin '${githubLogin}'`);
+    }
+
+    return {
+        token: user.githubToken,
+        user
+    };
 }
 
-module.exports = { postPhoto, githubAuth };
+module.exports = { postPhoto, githubAuth, addFakeUsers };

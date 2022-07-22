@@ -17,7 +17,6 @@ const start = async () => {
     );
     const db = client.db();
 
-
     const server = new ApolloServer({
         typeDefs,
         resolvers,

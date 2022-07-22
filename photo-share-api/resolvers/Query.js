@@ -1,11 +1,11 @@
 const totalPhotos = (parent, args, { db }) =>
-    db.collection('photos').estimateDocumentCount();
+    db.collection('photos').estimatedDocumentCount();
 
 const allPhotos = (parent, args, { db }) =>
     db.collection('photos').find().toArray();
 
 const totalUsers = (parent, args, { db }) =>
-    db.collection('users').estimateDocumentCount();
+    db.collection('users').estimatedDocumentCount();
 
 const allUsers = (parent, args, { db }) =>
     db.collection('users').find().toArray();
